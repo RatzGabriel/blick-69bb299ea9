@@ -63,7 +63,7 @@ main { padding:22px 0 64px; }
 .zaehler { margin-left:auto; font-family:var(--mono); font-size:13px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
 .zaehler b { color:var(--accent); font-size:17px; }
 .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); margin-top:22px; }
-.card { background:var(--card); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; text-decoration:none; color:inherit; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; color:inherit; cursor:pointer; }
 .card:hover { box-shadow:0 2px 4px rgba(22,26,21,.06),0 14px 34px -16px rgba(22,26,21,.3); transform:translateY(-2px); }
 .thumb { aspect-ratio:3/2; background:var(--line-2); overflow:hidden; position:relative; }
 .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
@@ -81,6 +81,8 @@ main { padding:22px 0 64px; }
 .facts span::after { content:"·"; margin-left:10px; color:var(--ink-3); }
 .facts span:last-child::after { content:""; }
 .title { font-size:14px; line-height:1.4; margin:0; }
+.title a { text-decoration:none; }
+.title a:hover { color:var(--accent); text-decoration:underline; }
 .meta { font-size:12.5px; color:var(--ink-3); }
 .tags { display:flex; gap:5px; margin-top:4px; flex-wrap:wrap; }
 .tag { font-size:11px; padding:2px 8px; border-radius:4px; background:var(--accent-soft); color:var(--accent); }
@@ -155,7 +157,7 @@ footer p { margin:0 0 8px; max-width:74ch; }
 
   function eur(n) {
     if (n == null || n === 0) return "—";
-    return "€ " + Math.round(n).toLocaleString("de-AT");
+    return "€ " + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   }
   function ampel(s) { return s >= 55 ? "g" : s >= 40 ? "y" : "r"; }
   function kurz(o) {
@@ -217,9 +219,9 @@ footer p { margin:0 0 8px; max-width:74ch; }
       ? '<img src="' + esc(o.bild) + '" alt="" loading="lazy" referrerpolicy="no-referrer">'
       : '<div class="thumb-empty">kein Bild</div>';
     const neu = o.neu ? '<span class="pill pill-neu">NEU</span>' : "";
-    const map = k ? '<a class="tag" href="' + esc(k) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">Karte</a>' : "";
+    const map = k ? '<a class="tag" href="' + esc(k) + '" target="_blank" rel="noopener">Karte</a>' : "";
     return (
-      '<a class="card" href="' + esc(o.url) + '" target="_blank" rel="noopener">' +
+      '<article class="card" data-url="' + esc(o.url) + '">' +
         '<div class="thumb">' + thumb +
           '<span class="pill pill-score ' + ampel(o.score) + '">' + Math.round(o.score) + '</span>' +
           neu +
@@ -227,11 +229,11 @@ footer p { margin:0 0 8px; max-width:74ch; }
         '<div class="body">' +
           '<div class="price">' + eur(o.preis) + '<small> · ' + rend + ' · ' + esc(o.basis) + '</small></div>' +
           '<div class="facts"><span>' + esc(o.plz + " " + o.ort) + '</span><span>' + esc(o.bezirk) + '</span><span>' + fl + '</span></div>' +
-          '<p class="title">' + esc(o.titel) + '</p>' +
+          '<p class="title"><a href="' + esc(o.url) + '" target="_blank" rel="noopener">' + esc(o.titel) + '</a></p>' +
           '<p class="meta">' + esc(kurz(o)) + '</p>' +
           '<div class="tags"><span class="tag">' + esc(o.vermietet) + '</span>' + map + '</div>' +
         '</div>' +
-      '</a>'
+      '</article>'
     );
   }
 
@@ -250,6 +252,11 @@ footer p { margin:0 0 8px; max-width:74ch; }
   chipIst.addEventListener("click", () => toggle(chipIst));
   q.addEventListener("input", render);
   sort.addEventListener("change", render);
+  grid.addEventListener("click", (e) => {
+    if (e.target.closest("a")) return;
+    const card = e.target.closest("article.card");
+    if (card && card.dataset.url) window.open(card.dataset.url, "_blank", "noopener");
+  });
   render();
 })();
 </script>
